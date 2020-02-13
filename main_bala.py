@@ -151,8 +151,8 @@ def main():
     train_dataset = datasets.ImageFolderInstance(
         traindir,
         transforms.Compose([
+            transforms.CenterCrop(320),
             transforms.RandomResizedCrop(224, scale=(0.2,1.)),
-            transforms.CenterCrop(112),
             transforms.RandomGrayscale(p=0.2),
             transforms.ColorJitter(0.4, 0.4, 0.4, 0.4),
             transforms.RandomHorizontalFlip(),
