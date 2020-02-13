@@ -151,10 +151,10 @@ def main():
     train_dataset = datasets.ImageFolderInstance(
         traindir,
         transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ColorJitter(0.05, 0.05, 0.05, .05), #transforms.ColorJitter(0.4, 0.4, 0.4, 0.4),
+            transforms.RandomResizedCrop(224, scale=(0.2,1.)),
+            transforms.RandomGrayscale(p=0.2),
+            transforms.ColorJitter(0.4, 0.4, 0.4, 0.4),
             transforms.RandomHorizontalFlip(),
-            transforms.RandomVerticalFlip(),
             transforms.ToTensor(),
             normalize,
         ]))
@@ -237,7 +237,7 @@ def main():
             print("=> loading checkpoint '{}'".format(args.resume))
             checkpoint = torch.load(args.resume)
             model.load_state_dict(checkpoint['state_dict'])
-            optimizer = FP16_Optimizer(optimizer, static_loss_scale=args.static_loss, verbose=False)
+            #optimizer = FP16_Optimizer(optimizer, static_loss_scale=args.static_loss, verbose=False)
             optimizer.load_state_dict(checkpoint['optimizer'])
             args.start_epoch = checkpoint['epoch']
             best_prec1 = checkpoint['best_prec1']
@@ -254,7 +254,9 @@ def main():
         
         own_state = model.state_dict()
         for name, param in checkpoint['state_dict'].items():
+            #print(name)
             if name not in own_state:
+                #print('NOT')
                 continue
                     
             if isinstance(param, nn.Parameter):
@@ -277,12 +279,13 @@ def main():
                 param = param.data
             own_state[name] = param
             
-        optimizer = FP16_Optimizer(optimizer, static_loss_scale=args.static_loss, verbose=False)
+        #optimizer = FP16_Optimizer(optimizer, static_loss_scale=args.static_loss, verbose=False)
         print("=> loaded checkpoint '{}' (epoch {})"
               .format(args.fine_tune, checkpoint['epoch']))
         #'''
     else:
-        optimizer = FP16_Optimizer(optimizer, static_loss_scale=args.static_loss, verbose=False)
+        #optimizer = FP16_Optimizer(optimizer, static_loss_scale=args.static_loss, verbose=False)
+        print('uhh')
 
     # Optionally recompute memory. If fine-tuning, then we must recompute memory
     if False or args.recompute_memory or args.fine_tune:
@@ -319,7 +322,7 @@ def main():
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
-        adjust_learning_rate(optimizer, epoch)
+        #adjust_learning_rate(optimizer, epoch)
 
         if epoch % 1 == 0:
             # evaluate on validation set
@@ -396,7 +399,8 @@ def train(train_loader, model, lemniscate, criterion, optimizer, epoch):
         '''
             
         #Backprop Apex optimizer loss
-        optimizer.backward(loss)
+        loss.backward()
+        #optimizer.backward(loss)
 
         # measure accuracy and record loss
         losses.update(loss.item() * args.iter_size, input.size(0))
