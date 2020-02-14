@@ -144,7 +144,7 @@ def main():
     #normalize = transforms.Normalize(mean=[0.234, 0.191, 0.159],  # xView stats
     #                                 std=[0.173, 0.143, 0.127])
     normalize = transforms.Normalize(mean=[0.451, 0.471, 0.478],  # soft_story stats
-                                     std=[0.003, 0.002, 0.002])
+                                     std=[0.75, 0.5, 0.5])
     
 
     print("Creating datasets")
@@ -152,7 +152,7 @@ def main():
         traindir,
         transforms.Compose([
             transforms.CenterCrop(320),
-            transforms.RandomResizedCrop(224, scale=(0.2,1.)),
+            transforms.RandomResizedCrop(224, scale=(0.6,1.)),
             transforms.RandomGrayscale(p=0.2),
             transforms.ColorJitter(0.4, 0.4, 0.4, 0.4),
             transforms.RandomHorizontalFlip(),
@@ -198,6 +198,7 @@ def main():
     val_dataset = datasets.ImageFolderInstance(
         valdir,
         transforms.Compose([
+            transforms.CenterCrop(320),
             transforms.Resize((224, 224)),
             transforms.ToTensor(),
             normalize,
@@ -289,7 +290,7 @@ def main():
         print('uhh')
 
     # Optionally recompute memory. If fine-tuning, then we must recompute memory
-    if False or args.recompute_memory or args.fine_tune:
+    if args.recompute_memory or args.fine_tune:
 
         # Aaron - Experiments show that iterating over torch.utils.data.DataLoader will skip the last few
         # unless the batch size evenly divides size of the data set. This shouldn't be the case
@@ -311,7 +312,7 @@ def main():
                 features = model(inputs)
                 lemniscate.memory[batch_idx * batchSize:batch_idx * batchSize + batchSize, :] = features.data
         #train_loader.dataset.transform = transform_bak
-        model.train()
+        #model.train()
     
     cudnn.benchmark = True
 
